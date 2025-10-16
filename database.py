@@ -9,13 +9,12 @@ engine = create_async_engine(
     echo=False,
     future=True,
 )
-AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    async with AsyncSessionLocal as session:
-        async with session() as s:
-            yield s
+    async with SessionLocal() as session:
+        yield session
 
 
 async def init_models():
