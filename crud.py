@@ -26,13 +26,10 @@ async def create_recipe(
 
 
 async def list_recipes_sorted(session: AsyncSession) -> list[Recipe]:
-    stmt = (
-        select(Recipe)
-        .order_by(
-            Recipe.views.desc(),
-            Recipe.cook_time_minutes.asc(),
-            Recipe.id.asc(),
-        )
+    stmt = select(Recipe).order_by(
+        Recipe.views.desc(),
+        Recipe.cook_time_minutes.asc(),
+        Recipe.id.asc(),
     )
     res = await session.execute(stmt)
     return list(res.scalars().all())
