@@ -1,3 +1,4 @@
+import os
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, status
@@ -21,10 +22,11 @@ app = FastAPI(
     openapi_tags=tags,
 )
 
-
+# ✅ В проде создаём таблицы, в тестах (TESTING=1) — пропускаем
 @app.on_event("startup")
 async def on_startup():
-    await init_models()
+    if os.getenv("TESTING") != "1":
+        await init_models()
 
 
 @app.get("/recipes", response_model=list[RecipeListItem], tags=["Recipes"])
@@ -50,9 +52,7 @@ async def get_recipe(
     )
 
 
-@app.post(
-    "/recipes", response_model=RecipeDetail, status_code=status.HTTP_201_CREATED, tags=["Recipes"]
-)
+@app.post("/recipes", response_model=RecipeDetail, status_code=status.HTTP_201_CREATED, tags=["Recipes"])
 async def post_recipe(
     payload: RecipeCreate,
     session: Annotated[AsyncSession, Depends(get_session)],
