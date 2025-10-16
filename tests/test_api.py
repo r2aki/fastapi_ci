@@ -12,6 +12,13 @@ from models import Base
 from main import app
 from database import get_session
 
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 
 @pytest.fixture(scope="session")
 def anyio_backend():
@@ -273,3 +280,4 @@ async def test_recipe_sorting(live_server: str):
             if len(zero_views) >= 2:
                 times = [r["cook_time_minutes"] for r in zero_views]
                 assert times == sorted(times), "Рецепты с 0 просмотрами должны быть отсортированы по времени"
+
