@@ -75,4 +75,3 @@ async def post_recipe(
         ingredients=[i.name for i in new_recipe.ingredients],
         description=new_recipe.description,
     )
-
