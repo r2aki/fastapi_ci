@@ -50,7 +50,9 @@ async def get_recipe(
     )
 
 
-@app.post("/recipes", response_model=RecipeDetail, status_code=status.HTTP_201_CREATED, tags=["Recipes"])
+@app.post(
+    "/recipes", response_model=RecipeDetail, status_code=status.HTTP_201_CREATED, tags=["Recipes"]
+)
 async def post_recipe(
     payload: RecipeCreate,
     session: Annotated[AsyncSession, Depends(get_session)],
