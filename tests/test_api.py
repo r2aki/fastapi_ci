@@ -6,6 +6,7 @@ import aiohttp
 import pytest
 import uvicorn
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.pool import NullPool
 
 from models import Base
 from main import app
@@ -24,7 +25,13 @@ async def test_engine_and_sessionmaker():
     os.close(fd)
     url = f"sqlite+aiosqlite:///{db_path}"
 
-    engine = create_async_engine(url, echo=False, future=True)
+    engine = create_async_engine(
+        url,
+        echo=False,
+        future=True,
+        poolclass=NullPool,
+        connect_args={"timeout": 30},
+    )
     session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     # Создаём таблицы заранее
@@ -134,3 +141,4 @@ async def test_create_list_detail_with_aiohttp(live_server: str):
             assert resp.status == 200
             detail2 = await resp.json()
             assert detail2["views"] == 2
+
