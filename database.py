@@ -1,4 +1,5 @@
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 DATABASE_URL = "sqlite+aiosqlite:///./recipes.db"
@@ -12,8 +13,9 @@ AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_co
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    async with AsyncSessionLocal() as session:
-        yield session
+    async with AsyncSessionLocal as session:
+        async with session() as s:
+            yield s
 
 
 async def init_models():
