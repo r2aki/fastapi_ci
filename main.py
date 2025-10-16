@@ -23,7 +23,7 @@ app = FastAPI(
 )
 
 
-# ✅ В проде создаём таблицы, в тестах (TESTING=1) — пропускаем
+# В проде создаём таблицы, в тестах (TESTING=1) — пропускаем
 @app.on_event("startup")
 async def on_startup():
     if os.getenv("TESTING") != "1":
@@ -75,3 +75,4 @@ async def post_recipe(
         ingredients=[i.name for i in new_recipe.ingredients],
         description=new_recipe.description,
     )
+
