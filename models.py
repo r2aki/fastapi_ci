@@ -1,6 +1,5 @@
-from typing import List
+from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, Text, ForeignKey
 
 
 class Base(DeclarativeBase):
@@ -16,7 +15,7 @@ class Recipe(Base):
     views: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     description: Mapped[str] = mapped_column(Text, nullable=False)
 
-    ingredients: Mapped[List["Ingredient"]] = relationship(
+    ingredients: Mapped[list["Ingredient"]] = relationship(
         back_populates="recipe",
         cascade="all, delete-orphan",
         lazy="selectin",
@@ -27,9 +26,7 @@ class Ingredient(Base):
     __tablename__ = "ingredients"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    recipe_id: Mapped[int] = mapped_column(
-        ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False, index=True
-    )
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
 
     recipe: Mapped[Recipe] = relationship(back_populates="ingredients")
