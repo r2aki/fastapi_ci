@@ -141,4 +141,3 @@ async def test_create_list_detail_with_aiohttp(live_server: str):
             assert resp.status == 200
             detail2 = await resp.json()
             assert detail2["views"] == 2
-
