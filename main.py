@@ -1,11 +1,11 @@
-from typing import List
+from typing import Annotated
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from crud import create_recipe, increment_views_and_get, list_recipes_sorted
 from database import get_session, init_models
-from schemas import RecipeCreate, RecipeListItem, RecipeDetail
-from crud import create_recipe, list_recipes_sorted, increment_views_and_get
+from schemas import RecipeCreate, RecipeDetail, RecipeListItem
 
 tags = [{"name": "Recipes", "description": "Список, детали и создание рецептов."}]
 
@@ -27,13 +27,16 @@ async def on_startup():
     await init_models()
 
 
-@app.get("/recipes", response_model=List[RecipeListItem], tags=["Recipes"])
-async def get_recipes(session: AsyncSession = Depends(get_session)):
+@app.get("/recipes", response_model=list[RecipeListItem], tags=["Recipes"])
+async def get_recipes(session: Annotated[AsyncSession, Depends(get_session)]):
     return await list_recipes_sorted(session)
 
 
 @app.get("/recipes/{recipe_id}", response_model=RecipeDetail, tags=["Recipes"])
-async def get_recipe(recipe_id: int, session: AsyncSession = Depends(get_session)):
+async def get_recipe(
+    recipe_id: int,
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
     recipe = await increment_views_and_get(session, recipe_id)
     if recipe is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Рецепт не найден")
@@ -47,10 +50,11 @@ async def get_recipe(recipe_id: int, session: AsyncSession = Depends(get_session
     )
 
 
-@app.post(
-    "/recipes", response_model=RecipeDetail, status_code=status.HTTP_201_CREATED, tags=["Recipes"]
-)
-async def post_recipe(payload: RecipeCreate, session: AsyncSession = Depends(get_session)):
+@app.post("/recipes", response_model=RecipeDetail, status_code=status.HTTP_201_CREATED, tags=["Recipes"])
+async def post_recipe(
+    payload: RecipeCreate,
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
     new_recipe = await create_recipe(
         session=session,
         name=payload.name,
