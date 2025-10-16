@@ -1,10 +1,6 @@
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
 import os
 import time
 import multiprocessing as mp
@@ -19,6 +15,11 @@ from sqlalchemy.pool import NullPool
 from models import Base
 from main import app
 from database import get_session
+
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 
 def _run_server(host: str, port: int) -> None:
@@ -155,3 +156,4 @@ async def test_create_list_detail_with_aiohttp(live_server: str):
             assert resp.status == 200
             detail2 = await resp.json()
             assert detail2["views"] == 2
+
