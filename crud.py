@@ -5,12 +5,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models import Recipe, Ingredient
 
 
-async def create_recipe(session: AsyncSession,
-                        name: str,
-                        cook_time_minutes: int,
-                        description: str,
-                        ingredients: List[str]) -> Recipe:
-    recipe = Recipe(name=name, cook_time_minutes=cook_time_minutes, description=description, views=0)
+async def create_recipe(
+    session: AsyncSession,
+    name: str,
+    cook_time_minutes: int,
+    description: str,
+    ingredients: List[str],
+) -> Recipe:
+    recipe = Recipe(
+        name=name, cook_time_minutes=cook_time_minutes, description=description, views=0
+    )
     for ing in ingredients:
         recipe.ingredients.append(Ingredient(name=ing))
     session.add(recipe)
@@ -20,9 +24,8 @@ async def create_recipe(session: AsyncSession,
 
 
 async def list_recipes_sorted(session: AsyncSession) -> List[Recipe]:
-    stmt = (
-        select(Recipe)
-        .order_by(Recipe.views.desc(), Recipe.cook_time_minutes.asc(), Recipe.id.asc())
+    stmt = select(Recipe).order_by(
+        Recipe.views.desc(), Recipe.cook_time_minutes.asc(), Recipe.id.asc()
     )
     res = await session.execute(stmt)
     return list(res.scalars().all())

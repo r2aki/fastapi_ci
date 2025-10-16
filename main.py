@@ -21,6 +21,7 @@ app = FastAPI(
     openapi_tags=tags,
 )
 
+
 @app.on_event("startup")
 async def on_startup():
     await init_models()
@@ -46,7 +47,9 @@ async def get_recipe(recipe_id: int, session: AsyncSession = Depends(get_session
     )
 
 
-@app.post("/recipes", response_model=RecipeDetail, status_code=status.HTTP_201_CREATED, tags=["Recipes"])
+@app.post(
+    "/recipes", response_model=RecipeDetail, status_code=status.HTTP_201_CREATED, tags=["Recipes"]
+)
 async def post_recipe(payload: RecipeCreate, session: AsyncSession = Depends(get_session)):
     new_recipe = await create_recipe(
         session=session,
