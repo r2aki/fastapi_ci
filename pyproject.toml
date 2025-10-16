@@ -1,0 +1,20 @@
+[project]
+name = "recipes-api"
+version = "1.0.0"
+requires-python = ">=3.11"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+exclude = [".venv", "venv", "__pycache__", ".pytest_cache", "dist", "build"]
+lint.select = ["E","W","F","B","UP","N"]
+lint.ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+[tool.pytest.ini_options]
+addopts = "-q"
+asyncio_mode = "auto"
