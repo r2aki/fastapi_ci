@@ -1,15 +1,15 @@
-import asyncio
 import os
+import asyncio
 import tempfile
 
 import aiohttp
 import pytest
 import uvicorn
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-from database import get_session
-from main import app
 from models import Base
+from main import app
+from database import get_session
 
 
 @pytest.fixture(scope="session")
@@ -18,15 +18,8 @@ def anyio_backend():
 
 
 @pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture(scope="session")
 async def test_engine_and_sessionmaker():
-    # временная база
+    # Отдельная временная БД для тестов
     fd, db_path = tempfile.mkstemp(prefix="recipes_test_", suffix=".db")
     os.close(fd)
     url = f"sqlite+aiosqlite:///{db_path}"
@@ -34,20 +27,24 @@ async def test_engine_and_sessionmaker():
     engine = create_async_engine(url, echo=False, future=True)
     session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
+    # Создаём таблицы заранее
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     yield engine, session_maker
 
+    # Чистим
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
-    os.remove(db_path)
+    try:
+        os.remove(db_path)
+    except FileNotFoundError:
+        pass
 
 
 @pytest.fixture(scope="session")
 async def app_with_overrides(test_engine_and_sessionmaker):
-    # говорим приложению, что мы в тестовом окружении
     os.environ["TESTING"] = "1"
 
     _, session_maker = test_engine_and_sessionmaker
@@ -63,6 +60,9 @@ async def app_with_overrides(test_engine_and_sessionmaker):
 
 @pytest.fixture(scope="session")
 async def live_server(app_with_overrides):
+    """
+    Запускаем uvicorn БЕЗ lifespan,
+    """
     host, port = "127.0.0.1", 8001
     config = uvicorn.Config(
         app_with_overrides,
@@ -70,7 +70,7 @@ async def live_server(app_with_overrides):
         port=port,
         log_level="warning",
         loop="asyncio",
-        lifespan="on",
+        lifespan="off",
     )
     server = uvicorn.Server(config)
 
@@ -79,8 +79,8 @@ async def live_server(app_with_overrides):
 
     task = asyncio.create_task(_run())
 
-    # ждём старт
-    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as sess:
+    # Ждём, пока сервер начнёт слушать
+    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as sess:
         for _ in range(100):
             try:
                 async with sess.get(f"http://{host}:{port}/docs") as resp:
@@ -104,7 +104,9 @@ async def live_server(app_with_overrides):
 @pytest.mark.asyncio
 async def test_create_list_detail_with_aiohttp(live_server: str):
     base = live_server
-    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as client:
+    timeout = aiohttp.ClientTimeout(total=60)  # побольше таймаут на CI
+    async with aiohttp.ClientSession(timeout=timeout) as client:
+        # POST /recipes
         payload = {
             "name": "Окрошка",
             "cook_time_minutes": 25,
@@ -112,15 +114,17 @@ async def test_create_list_detail_with_aiohttp(live_server: str):
             "ingredients": [{"name": "Квас"}, {"name": "Огурец"}],
         }
         async with client.post(f"{base}/recipes", json=payload) as resp:
-            assert resp.status == 201
+            assert resp.status == 201, f"POST failed: {resp.status}"
             created = await resp.json()
             rid = created["id"]
 
+        # GET /recipes
         async with client.get(f"{base}/recipes") as resp:
             assert resp.status == 200
             items = await resp.json()
             assert any(x["id"] == rid for x in items)
 
+        # GET /recipes/{id} (+1 просмотр)
         async with client.get(f"{base}/recipes/{rid}") as resp:
             assert resp.status == 200
             detail = await resp.json()
