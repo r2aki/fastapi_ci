@@ -8,9 +8,15 @@ class IngredientIn(BaseModel):
 
 
 class RecipeCreate(BaseModel):
-    name: constr(min_length=1, max_length=200) = Field(..., description="Название рецепта", example="Окрошка")
-    cook_time_minutes: conint(ge=1, le=24 * 60) = Field(..., description="Время готовки в минутах", example=25)
-    description: constr(min_length=1) = Field(..., description="Описание", example="Нарезать. Смешать.")
+    name: constr(min_length=1, max_length=200) = Field(
+        ..., description="Название рецепта", example="Окрошка"
+    )
+    cook_time_minutes: conint(ge=1, le=24 * 60) = Field(
+        ..., description="Время готовки в минутах", example=25
+    )
+    description: constr(min_length=1) = Field(
+        ..., description="Описание", example="Нарезать. Смешать."
+    )
     ingredients: list[IngredientIn] = Field(
         ...,
         description="Список ингредиентов",

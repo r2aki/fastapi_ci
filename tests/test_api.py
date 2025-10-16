@@ -61,7 +61,9 @@ async def app_with_overrides(test_engine_and_sessionmaker):
 @pytest.fixture(scope="session")
 async def live_server(app_with_overrides):
     host, port = "127.0.0.1", 8001
-    config = uvicorn.Config(app_with_overrides, host=host, port=port, log_level="warning", loop="asyncio", lifespan="on")
+    config = uvicorn.Config(
+        app_with_overrides, host=host, port=port, log_level="warning", loop="asyncio", lifespan="on"
+    )
     server = uvicorn.Server(config)
 
     async def _run():
@@ -127,6 +129,8 @@ async def test_create_list_detail_with_aiohttp(live_server: str):
             assert resp.status == 200
             detail2 = await resp.json()
             assert detail2["views"] == 2
+
+
 import asyncio
 import os
 import tempfile
@@ -190,7 +194,9 @@ async def app_with_overrides(test_engine_and_sessionmaker):
 @pytest.fixture(scope="session")
 async def live_server(app_with_overrides):
     host, port = "127.0.0.1", 8001
-    config = uvicorn.Config(app_with_overrides, host=host, port=port, log_level="warning", loop="asyncio", lifespan="on")
+    config = uvicorn.Config(
+        app_with_overrides, host=host, port=port, log_level="warning", loop="asyncio", lifespan="on"
+    )
     server = uvicorn.Server(config)
 
     async def _run():
